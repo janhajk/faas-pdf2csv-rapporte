@@ -9,5 +9,7 @@
    "dependencies": {
       "async": "2.1.4",
       "pdf2json": "1.x.x",
+      "formidable-serverless": "1.x.x",
+      "lambda-multipart": "1.x.x"
    }
 }

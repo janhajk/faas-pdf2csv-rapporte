@@ -1,16 +1,10 @@
-// User Config File
-var config = require(__dirname + '/config.js');
-
-var utils = require(__dirname + '/utils.js');
-
-var auth = require(__dirname + '/auth.js');
-
+let utils = require('utils.js');
 
 // System
-var fs = require('fs');
+let fs = require('fs');
 
 // Middleware for Fileuploads
-var formidable = require('formidable');
+let formidable = require('formidable-serverless');
 
 
 var basic = function(app, connection) {
@@ -29,7 +23,7 @@ var basic = function(app, connection) {
 
 
     app.post('/upload', /*auth.ensureAuthenticated,*/ function(req, res) {
-        let gpg = require(__dirname + '/lib/rapporte.js');
+        let gpg = require('rapporte.js');
         let form = new formidable.IncomingForm();
         let files = [];
         form.on('file', function(field, file) {

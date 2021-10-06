@@ -17,20 +17,43 @@
       //       xhr.send(fd);
       // }
 
+      const array2csv = function(data, delimiter = ';') {
+            var file = "";
+
+            // first format the numbers
+            for (let i = 0; i < data.length; i++) {
+                  let keys = Object.keys(data[i]);
+                  for (let r = 0; r < keys.length; r++) {
+                        if (typeof data[i][keys[r]] !== 'number') {
+                              data[i][keys[r]] = '"' + data[i][keys[r]] + '"';
+                        }
+                  }
+            }
+
+            // create lines
+            for (let i = 0; i < data.length; i++) {
+                  let values = Object.values(data[i]);
+                  let line = values.join(delimiter);
+                  line += "\n";
+                  file += line;
+            }
+            return file;
+      };
+
 
       /**
-       * 
+       *
        * document Loaded listener
-       * 
+       *
        * this executes on DocumentLoaded
-       * 
-       * 
+       *
+       *
        */
       document.addEventListener('DOMContentLoaded', function() {
 
 
 
-            var uploadForm = function() {
+            let uploadForm = function() {
                   let frmInput = function(params) {
                         let formGroup = function() {
                               let div = document.createElement('div');
@@ -97,65 +120,70 @@
                   };
                   var content = document.getElementById('frmUpload');
                   var form = document.createElement('form');
-                  form.action = 'upload';
+                  form.action = 'https://h7reuf1hhf.execute-api.eu-west-1.amazonaws.com/csv';
                   form.method = 'post';
                   form.enctype = 'multipart/form-data';
 
                   let formPdfAnalysis = [{
-                              name: 'fileupload',
-                              type: 'file',
-                              label: 'Dateien:',
-                              showLabel: false
-                        },
-                        {
-                              name: 'compare',
-                              type: 'checkbox',
-                              label: 'Vergleichen von Vorabzug <=> Definitive Rechnung:',
-                        },
-                        {
-                              name: 'headerbeginning',
-                              type: 'dropdown',
-                              options: [{
-                                          value: 'GL/',
-                                          text: 'Rapport-Tabellen ("GL/")'
-                                    },
-                                    {
-                                          value: 'Firma',
-                                          text: 'Personentabelle GPL ("Firma")'
-                                    }
-                              ],
-                              label: 'Beginn der Tabellen-Kopfzeile:'
-                        },
-                        {
-                              name: 'firstPage',
-                              text: '4',
-                              label: 'Erste Seite mit zu lesenden Daten:'
-                        },
-                        {
-                              name: 'printHeaders',
-                              type: 'checkbox',
-                              label: 'Soll der Tabellenkopf gedruckt werden?'
-                        },
-                        {
-                              name: 'tolerance',
-                              text: '0.05',
-                              label: 'Toleranz der X-Position von Zellen gegenüber der Kopfzeile'
-                        },
-                        {
-                              name: 'pdf2json',
-                              type: 'checkbox',
-                              label: 'Nur Ausgabe der PDF2JSON Konvertierung'
-                        }
-                  ];
+                        name: 'fileupload',
+                        type: 'file',
+                        label: 'Dateien:',
+                        showLabel: false
+                  }];
                   for (let i in formPdfAnalysis) {
                         form.appendChild(frmInput(formPdfAnalysis[i]));
                   }
-                  var button = document.createElement('input');
-                  button.className = 'btn btn-primary';
-                  button.type = 'submit';
-                  form.appendChild(button);
                   content.appendChild(form);
             }();
+
+
+            $(':file').on('change', function() {
+                  getLines(this.files);
+            });
+
+
+            const getLines = async function(files) {
+                  let lines = await new Promise((resolve, reject) => {
+                        let counter = 0;
+                        let lines = [];
+                        for (let file of files) {
+                              console.log('uploading', file);
+                              let fData = new FormData();
+                              fData.append('file', file);
+                              $.ajax({
+                                    url: 'https://mgj52989la.execute-api.eu-west-1.amazonaws.com/dev/csv',
+                                    type: 'POST',
+                                    data: fData,
+                                    cache: false,
+                                    contentType: false,
+
+                                    processData: false
+                              }).done(data => {
+                                    lines = lines.concat(data);
+                                    counter++;
+                                    if (counter === files.length) {
+                                          resolve(lines);
+                                    }
+                              });
+                        }
+                  });
+                  console.log(lines);
+
+                  let datum = lines[0].Datum;
+                  datum = '20' + datum.split('.').reverse().join('-').substr(0, 5);
+
+                  let csv = array2csv(lines);
+
+                  window.URL = window.URL || window.webkitURL;
+                  let blobObj = new Blob(["﻿", csv]);
+                  const fileUrl = window.URL.createObjectURL(blobObj);
+                  let a = document.createElement('a');
+                  a.href = fileUrl;
+                  a.download = datum + '_Zusammenzug.csv';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+            };
 
       });
 

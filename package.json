@@ -1,0 +1,13 @@
+{
+   "name": "faas-pdfanalyzer",
+   "description": "Smart Analyzing of pdf Files",
+   "version": "0.0.2",
+   "private": true,
+   "scripts": {
+      "start": "node app.js"
+   },
+   "dependencies": {
+      "async": "2.1.4",
+      "pdf2json": "1.x.x",
+   }
+}
